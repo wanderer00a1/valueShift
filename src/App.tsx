@@ -1,6 +1,7 @@
 import NavBar from "./components/NavBar";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { ThreeDot } from "react-loading-indicators";
 function App() {
   return (
     <div
@@ -18,15 +19,21 @@ function Form() {
   const [from, setFrom] = useState("USD");
   const [to, setTo] = useState("EUR");
   const [converted, setConverted] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function converter() {
+      setIsLoading(true);
       const res = await axios.get(
         `https://api.frankfurter.dev/v1/latest?amount=${amount}&base=${from}&symbols=${to}`
       );
       setConverted(res.data.rates[to]);
+      setIsLoading(false);
     }
-    if (to === from) return setConverted(amount);
+    if (amount === 0 || to === from ) {
+      setConverted(amount);
+      return;
+    }
     converter();
   }, [from, to, amount]);
   return (
@@ -43,9 +50,14 @@ function Form() {
               setAmount(Number(value));
             }
           }}
+          disabled={isLoading}
         />
       </div>
-      <select value={from} onChange={(e) => setFrom(e.target.value)}>
+      <select
+        value={from}
+        onChange={(e) => setFrom(e.target.value)}
+        disabled={isLoading}
+      >
         <option value="EUR">EUR</option>
         <option value="AUD">AUD</option>
         <option value="INR">INR</option>
@@ -56,7 +68,11 @@ function Form() {
       <p style={{ display: "grid", placeItems: "center", fontSize: "30px" }}>
         ⬇️
       </p>
-      <select value={to} onChange={(e) => setTo(e.target.value)}>
+      <select
+        value={to}
+        onChange={(e) => setTo(e.target.value)}
+        disabled={isLoading}
+      >
         <option value="USD">USD</option>
         <option value="AUD">AUD</option>
         <option value="INR">INR</option>
@@ -65,7 +81,11 @@ function Form() {
         <option value="CNY">CNY</option>
       </select>
       <div className="to">
-        <input type="numeric" value={converted} disabled />
+        {isLoading ? (
+          <ThreeDot color="#31b2cc" />
+        ) : (
+          <input type="numeric" value={converted} disabled />
+        )}
         <br />
         <label style={{ display: "grid", placeItems: "center" }}>{to}</label>
       </div>
